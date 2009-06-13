@@ -1,27 +1,5 @@
 <?php
 
-//  Description: JooMood WP Plugins - Retrieve Last X SE Classifieds
-//	Author: JooMood
-//	Version: 1.0
-//	Author URI: http://2cq.it/
-
-//	Copyright 2009, JooMOod
-//	-----------------------
-
-//	This program is free software: you can redistribute it and/or modify
-//	it under the terms of the GNU General Public License as published by
-//	the Free Software Foundation, either version 3 of the License, or
-//	(at your option) any later version.
-
-//	This program is distributed in the hope that it will be useful,
-//	but WITHOUT ANY WARRANTY; without even the implied warranty of
-//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//	GNU General Public License for more details.
-
-//	You should have received a copy of the GNU General Public License
-//	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 //					JOOMOOD START PLAYING
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -121,8 +99,6 @@ $showownerz="0";
 		
 // ---------------------------------------------------------
 
-		$mainbox_width=$mainbox_width."%";
-
 
 		// Check Main Box border style
 		
@@ -210,6 +186,23 @@ $showownerz="0";
 		$boxbgcol=$box_bg_color;
 		
 		
+		
+		// Be sure of mainbox width, don't want to destroy html tables
+		
+		if($mainbox_width=="" || $mainbox_width=="0") {
+		$mainbox_width="100";
+		}
+		
+		if($how_many_groups=="1") {
+		$mytbl="100";
+		} else {
+		$mytbl=floor($mainbox_width/$how_many_groups);
+		}
+		
+		$mainbox_width=$mainbox_width."%";
+		$mytbl=$mytbl."%";
+		
+
 		// Build Full Style Variables
 		
 		$mystyle="style=\"border:".$boxbord." ".$boxbordcol."; background-color: ".$boxbgcol.";\"";
@@ -276,10 +269,10 @@ $shortdesc="";
 
 // Comment-Comments? View-Views?
 
-if($row['classified_totalcomments']>1 && $row['classified_comments']=="63") {
+if($row['classified_totalcomments']>1) {
 $comment="<a href=\"{$socialdir}/classified.php?user_id={$row['classified_user_id']}&amp;classified_id=".$row['classified_id']."\" title=\"".$go_profile_text.": {$row['classified_title']}\"><b>{$row['classified_totalcomments']}</b> Comments</a>";
 } else 
-if($row['classified_totalcomments']==1 && $row['classified_comments']=="63") {
+if($row['classified_totalcomments']==1) {
 $comment="<a href=\"{$socialdir}/classified.php?user_id={$row['classified_user_id']}&amp;classified_id=".$row['classified_id']."\" title=\"".$go_profile_text.": {$row['classified_title']}\"><b>1</b> Comment</a>";
 } else {
 $comment="No Comment";
@@ -294,14 +287,36 @@ $view="No View";
 }
 
 $mydir=$wpdir."/wp-content/plugins/wp-se_classifieds";
+$subdir = $row['classified_id']+999-(($row['classified_id']-1)%1000);
+
+if($use_resize !=="no") { // RESIZING SCRIPT
 
 if ($row['classified_photo']!='') {
-
 // Creates a thumbnail based on your personal dims (width/height), without stretching the original pic
-
-$mypic="<img src=\"{$mydir}/image.php/{$row['classified_photo']}?width={$mywidth}&amp;height={$myheight}&amp;cropratio=1:1&amp;quality=100&amp;image={$socialdir}/uploads_classified/1000/{$row['classified_id']}/{$row['classified_photo']}\" style=\"border:".$image_border."px solid ".$image_bordercolor."\" alt=\"".$myn."\" />";
+$mypic="<img src=\"{$mydir}/image.php/{$row['classified_photo']}?width={$mywidth}&amp;height={$myheight}&amp;cropratio=1:1&amp;quality=100&amp;image={$socialdir}/uploads_classified/{$subdir}/{$row['classified_id']}/{$row['classified_photo']}\" style=\"border:".$image_border."px solid ".$image_bordercolor."\" alt=\"".$myn."\" />";
 } else {
 $mypic="<img src=\"{$mydir}/image.php/nophoto.gif?width={$mywidth}&amp;height={$myheight}&amp;cropratio=1:1&amp;quality=100&amp;image={$socialdir}/{$empty_image_url}\" style=\"border:".$image_border."px ".$image_bordercolor." solid\" alt=\"".$myn."\" />";
+}
+
+} else { // NO RESIZING SCRIPT
+
+if ($row['classified_photo']!='') {
+// Creates a thumbnail based on your personal dims (width/height)
+$myp=str_replace(".", "_thumb.", $row['classified_photo']);
+$mypfile=$socialdir."/uploads_classified/{$subdir}/{$row['classified_id']}/{$myp}";
+
+if (@fopen($mypfile, "r")) {
+$myps=str_replace(".", "_thumb.", $row['classified_photo']);
+$mypfile=$socialdir."/uploads_classified/{$subdir}/{$row['classified_id']}/{$myps}";
+} else {
+$mypfile=$socialdir."/uploads_classified/{$subdir}/{$row['classified_id']}/{$row['classified_photo']}";
+}
+
+$mypic="<img src=\"{$mypfile}\" width=\"{$mywidth}\" height=\"{$myheight}\" style=\"border:".$image_border."px solid ".$image_bordercolor."\" alt=\"".$myn."\" />";
+} else {
+$mypic="<img src=\"{$socialdir}/{$empty_image_url}\" width=\"{$mywidth}\" height=\"{$myheight}\" style=\"border:".$image_border."px ".$image_bordercolor." solid\" alt=\"".$myn."\" />";
+}
+
 }
 
 
@@ -343,7 +358,7 @@ $mystats="";
 if($i<$how_many_groups) {
 
 $rows .= "
-<td align=\"left\" valign=\"top\">
+<td align=\"left\" valign=\"top\" width=\"{$mytbl}\">
 <table width=\"100%\" cellspacing=\"{$inner_cellspacing}\" cellpadding=\"{$inner_cellpadding}\" ".$mystyle.">
 <tr>
 <td width=\"".$mywidth."\" align=\"left\" valign=\"top\" scope=\"row\">{$mylink}{$mypic}</a></td>
@@ -359,7 +374,7 @@ $rows .= "
 } else {
 
 $rows .= "
-</tr><tr><td align=\"left\" valign=\"top\">
+</tr><tr><td align=\"left\" valign=\"top\" width=\"{$mytbl}\">
 <table width=\"100%\" cellspacing=\"{$inner_cellspacing}\" cellpadding=\"{$inner_cellpadding}\" ".$mystyle.">
 <tr>
 <td width=\"".$mywidth."\" align=\"left\" valign=\"top\" scope=\"row\">{$mylink}{$mypic}</a></td>
